@@ -1,5 +1,7 @@
 #!/usr/bin/env python3
-"""Build a cumulative-recitation Anki deck from QCF4 page JSON files."""
+"""Build a cumulative-recitation Anki deck from QCF4 page JSON files.
+Run through GitHub Actions; user Quran text remains private and is not committed here.
+"""
 from __future__ import annotations
 import argparse, collections, html, json, re, sys, zipfile
 from pathlib import Path
