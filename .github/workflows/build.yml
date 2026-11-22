@@ -1,0 +1,32 @@
+name: Build Quran Anki deck
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - "build_quran_anki.py"
+      - ".github/workflows/build.yml"
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/checkout@v4
+        with:
+          repository: MohamadHajjRabee/quran-qcf4
+          path: quran-qcf4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Install builder
+        run: pip install genanki
+      - name: Build and validate
+        run: python build_quran_anki.py --qcf4 quran-qcf4 --output Quran_Cumulative_604_Pages.apkg
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Quran-Cumulative-Anki-Deck
+          path: |
+            Quran_Cumulative_604_Pages.apkg
+            build-report.json
+          if-no-files-found: error
+          retention-days: 30
