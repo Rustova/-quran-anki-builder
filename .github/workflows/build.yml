@@ -3,6 +3,8 @@ on:
   workflow_dispatch:
   push:
     branches: [main]
+permissions:
+  contents: write
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -27,3 +29,13 @@ jobs:
             build-report.json
           if-no-files-found: error
           retention-days: 30
+      - name: Publish downloadable deck
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: quran-deck-latest
+          name: Quran Cumulative Anki Deck
+          make_latest: true
+          files: |
+            Quran_Cumulative_604_Pages.apkg
+            build-report.json
+          overwrite_files: true
