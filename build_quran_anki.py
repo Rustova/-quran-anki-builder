@@ -36,6 +36,17 @@ def load_pages(root: Path):
                     if text:
                         words.append({"text": text, "verse": w["verse_key"], "position": w.get("position")})
                         verse_keys.add(w["verse_key"])
+                elif w.get("type") == "bismillah":
+                    # QCF4 stores the basmala separately at the start of most surahs.
+                    sid = w.get("sura")
+                    if sid is None:
+                        sid = next((x.get("id") for x in data.get("surahs", [])), None)
+                    if sid is not None:
+                        text = clean_word(w)
+                        if text:
+                            key = f"{int(sid)}:1"
+                            words.append({"text": text, "verse": key, "position": 0})
+                            verse_keys.add(key)
             if words:
                 lines.append({"line": int(line.get("line", len(lines)+1)), "words": words})
         pages.append({"page": expected, "lines": lines})
