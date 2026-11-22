@@ -39,15 +39,21 @@ def load_pages(root: Path):
         pages.append({"page": expected, "lines": lines})
     if len(verse_keys) != EXPECTED_VERSES:
         raise ValueError(f"Expected {EXPECTED_VERSES} unique verse keys; found {len(verse_keys)}")
+    index_path = root / "index.json"
+    if not index_path.exists():
+        raise ValueError("QCF4 index.json is missing")
+    index_data = json.loads(index_path.read_text(encoding="utf-8"))
+    meta = index_data.get("meta", {})
+    if meta.get("total_pages") != EXPECTED_PAGES or meta.get("total_verses") != EXPECTED_VERSES:
+        raise ValueError(f"QCF4 index metadata mismatch: {meta}")
+    chapters = index_data.get("chapters", [])
+    if len(chapters) != EXPECTED_CHAPTERS:
+        raise ValueError(f"Expected {EXPECTED_CHAPTERS} chapters; found {len(chapters)}")
     expected_keys = set()
-    for surah, count in enumerate([
-      7,286,200,176,120,165,206,75,129,109,123,111,43,52,99,128,111,110,98,135,
-      112,78,118,64,77,227,93,88,69,60,34,30,73,54,45,83,182,88,75,85,54,53,
-      89,59,37,35,38,29,18,45,60,49,62,55,78,96,29,22,24,13,14,11,11,18,12,
-      12,30,52,52,44,28,28,20,56,40,31,50,40,46,42,29,19,36,25,22,17,19,26,
-      30,20,15,21,11,8,8,19,5,8,8,11,11,8,3,9,5,4,7,3,6
-    ], 1):
-        expected_keys.update(f"{surah}:{ayah}" for ayah in range(1, count+1))
+    for chapter in chapters:
+        sid = int(chapter["id"])
+        count = int(chapter["verses_count"])
+        expected_keys.update(f"{sid}:{ayah}" for ayah in range(1, count + 1))
     if verse_keys != expected_keys:
         missing = sorted(expected_keys - verse_keys)[:10]
         extra = sorted(verse_keys - expected_keys)[:10]
@@ -56,15 +62,6 @@ def load_pages(root: Path):
 
 def group_lines(lines, min_lines=3):
     """Create contiguous groups, ending only after a complete ayah."""
-    groups, current = [], []
-    for line in lines:
-        current.append(line)
-        line_count = len(current)
-        if line_count >= min_lines:
-            last_verse = current[-1]["words"][-1]["verse"]
-            # A boundary is safe only when the next line does not continue this ayah.
-            # Defer the decision until the next line is available.
-            groups.append(None) if False else None
     # Greedy safe boundaries: a line boundary is safe if its final verse differs
     # from the first verse on the next line.
     groups, start = [], 0
